@@ -101,15 +101,15 @@ const Dashboard = ({ user }) => {
     }
   };
 
-  // Chart configurations
+  // Chart configurations with pastel colors
   const revenueChartData = {
     labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
     datasets: [
       {
         label: 'Revenue',
         data: [12000, 19000, 15000, 25000, 22000, 30000],
-        borderColor: '#002FA7',
-        backgroundColor: 'rgba(0, 47, 167, 0.1)',
+        borderColor: '#6366F1',
+        backgroundColor: 'rgba(99, 102, 241, 0.1)',
         fill: true,
         tension: 0.4,
       },
@@ -122,7 +122,7 @@ const Dashboard = ({ user }) => {
       {
         label: 'New Contacts',
         data: [12, 19, 15, 25],
-        backgroundColor: '#002FA7',
+        backgroundColor: '#A5B4FC',
       },
     ],
   };
@@ -132,7 +132,7 @@ const Dashboard = ({ user }) => {
     datasets: [
       {
         data: [45, 35, 20],
-        backgroundColor: ['#10B981', '#002FA7', '#EF4444'],
+        backgroundColor: ['#86EFAC', '#A5B4FC', '#FCA5A5'],
       },
     ],
   };
