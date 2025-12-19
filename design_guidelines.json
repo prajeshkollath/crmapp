@@ -1,0 +1,175 @@
+{
+  "design_system": {
+    "identity": {
+      "name": "E1_CRM_System",
+      "archetype": "Swiss & High-Contrast",
+      "core_values": ["Authority", "Clarity", "Truth"],
+      "emotional_tone": "Objective, rigid, functional. Color exists only to guide action."
+    },
+    "typography": {
+      "font_family": {
+        "headings": "Manrope, sans-serif",
+        "body": "Work Sans, sans-serif",
+        "mono": "JetBrains Mono, monospace"
+      },
+      "scale": {
+        "h1": "text-4xl font-bold tracking-tight lg:text-5xl",
+        "h2": "text-3xl font-semibold tracking-tight",
+        "h3": "text-2xl font-semibold tracking-tight",
+        "p": "text-base leading-7",
+        "small": "text-sm font-medium leading-none"
+      },
+      "rules": [
+        "Headings > 32px MUST use tracking-tight",
+        "Overlines MUST be Uppercase + Tiny + Wide Spacing (tracking-[0.2em])",
+        "Line height: Tight for headers, Relaxed for body"
+      ]
+    },
+    "colors": {
+      "palette": {
+        "background": "#FFFFFF",
+        "foreground": "#0A0A0A",
+        "primary": "#002FA7",
+        "primary_foreground": "#FFFFFF",
+        "secondary": "#F4F4F5",
+        "secondary_foreground": "#18181B",
+        "muted": "#F4F4F5",
+        "muted_foreground": "#71717A",
+        "accent": "#F4F4F5",
+        "accent_foreground": "#18181B",
+        "destructive": "#EF4444",
+        "destructive_foreground": "#FAFAFA",
+        "border": "#E4E4E7",
+        "input": "#E4E4E7",
+        "ring": "#002FA7"
+      },
+      "usage": {
+        "dashboard_bg": "bg-white",
+        "sidebar_bg": "bg-zinc-50 border-r border-zinc-200",
+        "card_bg": "bg-white border border-zinc-200 shadow-sm",
+        "text_primary": "text-zinc-950",
+        "text_secondary": "text-zinc-500"
+      }
+    },
+    "spacing": {
+      "scale": "Tailwind default",
+      "layout_padding": "p-6 md:p-8 lg:p-12",
+      "component_padding": "p-4 or p-6",
+      "gap": "gap-6 or gap-8"
+    },
+    "visual_enhancers": {
+      "radius": "rounded-sm",
+      "shadows": {
+        "card": "shadow-[0_1px_3px_0_rgb(0,0,0,0.1),0_1px_2px_-1px_rgb(0,0,0,0.1)]",
+        "hover": "shadow-[0_4px_6px_-1px_rgb(0,0,0,0.1),0_2px_4px_-2px_rgb(0,0,0,0.1)]"
+      },
+      "borders": "border-zinc-200",
+      "glass_effect": "bg-white/80 backdrop-blur-md border-b border-white/20"
+    }
+  },
+  "layout_strategies": {
+    "dashboard": {
+      "grid_type": "Control Room Grid",
+      "structure": "grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6",
+      "rules": [
+        "Summary cards: col-span-1",
+        "Main chart: col-span-2 row-span-2 or col-span-3",
+        "Feed/List: col-span-1 row-span-2",
+        "Every pixel utilized, h-full on children"
+      ]
+    },
+    "sidebar": {
+      "width": "w-64",
+      "position": "fixed left-0 top-0 h-full",
+      "style": "border-r bg-zinc-50/50 backdrop-blur-xl"
+    },
+    "tables": {
+      "style": "minimalist",
+      "rules": [
+        "No vertical borders",
+        "Monospace fonts for numbers",
+        "Right-align numerical columns",
+        "Zebra striping: OFF (use hover state instead)",
+        "Header: uppercase, text-xs, text-muted-foreground, tracking-wider"
+      ]
+    }
+  },
+  "components": {
+    "buttons": {
+      "style": "sharp edges or rounded-sm",
+      "primary": "bg-primary text-primary-foreground hover:bg-primary/90",
+      "secondary": "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+      "ghost": "hover:bg-accent hover:text-accent-foreground"
+    },
+    "cards": {
+      "style": "bg-card text-card-foreground border shadow-sm rounded-sm",
+      "header": "p-6 flex flex-row items-center justify-between space-y-0 pb-2",
+      "content": "p-6 pt-0"
+    },
+    "inputs": {
+      "style": "rounded-sm border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+    }
+  },
+  "assets": {
+    "images": {
+      "user_avatars": [
+        {
+          "url": "https://images.unsplash.com/photo-1689600944138-da3b150d9cb8?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3MjQyMTd8MHwxfHNlYXJjaHwxfHxwcm9mZXNzaW9uYWwlMjBoZWFkc2hvdCUyMHBvcnRyYWl0fGVufDB8fHx8MTc2NjE0ODY3N3ww&ixlib=rb-4.1.0&q=85",
+          "alt": "Professional woman headshot",
+          "category": "user"
+        },
+        {
+          "url": "https://images.unsplash.com/photo-1576558656222-ba66febe3dec?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3MjQyMTd8MHwxfHNlYXJjaHwyfHxwcm9mZXNzaW9uYWwlMjBoZWFkc2hvdCUyMHBvcnRyYWl0fGVufDB8fHx8MTc2NjE0ODY3N3ww&ixlib=rb-4.1.0&q=85",
+          "alt": "Professional man headshot",
+          "category": "user"
+        },
+        {
+          "url": "https://images.unsplash.com/photo-1562228802-4b1052d0f845?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3MjQyMTd8MHwxfHNlYXJjaHwzfHxwcm9mZXNzaW9uYWwlMjBoZWFkc2hvdCUyMHBvcnRyYWl0fGVufDB8fHx8MTc2NjE0ODY3N3ww&ixlib=rb-4.1.0&q=85",
+          "alt": "User with helmet",
+          "category": "user"
+        },
+        {
+          "url": "https://images.unsplash.com/photo-1672685667592-0392f458f46f?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3MjQyMTd8MHwxfHNlYXJjaHw0fHxwcm9mZXNzaW9uYWwlMjBoZWFkc2hvdCUyMHBvcnRyYWl0fGVufDB8fHx8MTc2NjE0ODY3N3ww&ixlib=rb-4.1.0&q=85",
+          "alt": "Man in hoodie",
+          "category": "user"
+        }
+      ],
+      "company_logos": [
+        {
+          "url": "https://images.pexels.com/photos/9949424/pexels-photo-9949424.jpeg",
+          "alt": "Abstract geometric logo 1",
+          "category": "logo"
+        },
+        {
+          "url": "https://images.pexels.com/photos/34774316/pexels-photo-34774316.jpeg",
+          "alt": "Abstract geometric logo 2",
+          "category": "logo"
+        }
+      ]
+    },
+    "icons": {
+      "library": "lucide-react",
+      "style": "stroke-width: 1.5px; size: 16px or 20px"
+    }
+  },
+  "instructions_to_main_agent": [
+    "Implement the 'Swiss & High-Contrast' theme strictly.",
+    "Use the 'Control Room' grid for the dashboard layout.",
+    "Ensure all interactive elements have data-testid attributes.",
+    "Use the provided image URLs for avatars and logos.",
+    "Do not use gradients for backgrounds; rely on white space and borders.",
+    "Use 'Manrope' for all headings and 'Work Sans' for body text.",
+    "Implement the sidebar as a fixed left navigation.",
+    "Ensure the 'Contacts' table follows the minimalist rules (no vertical borders).",
+    "Use Shadcn UI components but customize them to match the 'Swiss' aesthetic (sharp corners, high contrast).",
+    "For charts, use Recharts with the defined primary color (#002FA7) and muted grays."
+  ],
+  "universal_guidelines": [
+    "Avoid 'AI slop' - no generic centered layouts.",
+    "Create depth through z-index and subtle shadows, not heavy gradients.",
+    "Micro-animations on all interactive elements.",
+    "Generous spacing (p-6 to p-12).",
+    "No 'AI assistant' emojis.",
+    "Use 'sonner' for toasts."
+  ]
+}
