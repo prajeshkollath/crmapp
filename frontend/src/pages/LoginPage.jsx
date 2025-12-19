@@ -23,6 +23,11 @@ const LoginPage = () => {
     navigate('/dashboard', { state: { user: demoUser } });
   };
 
+  const handleGoogleLogin = () => {
+    const redirectUrl = `${window.location.origin}/auth/callback`;
+    window.location.href = `https://auth.emergentagent.com/?redirect=${encodeURIComponent(redirectUrl)}`;
+  };
+
   return (
     <Box
       sx={{
