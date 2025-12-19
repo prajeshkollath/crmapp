@@ -179,8 +179,10 @@ function MainLayout({ children, user }) {
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'background.default' }}>
       <Sidebar user={user} onLogout={handleLogout} />
-      <Box component="main" sx={{ flexGrow: 1, ml: '256px', p: 3 }}>
-        {React.cloneElement(children, { user })}
+      <Box component="main" sx={{ flexGrow: 1, ml: '256px', p: 4, maxWidth: '100%', width: '100%' }}>
+        <Box sx={{ maxWidth: '1600px', mx: 'auto', width: '100%' }}>
+          {React.cloneElement(children, { user })}
+        </Box>
       </Box>
     </Box>
   );
