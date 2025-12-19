@@ -246,22 +246,29 @@ const ContactsList = () => {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this contact?')) return;
+  const handleDeleteClick = (contact) => {
+    setDeletingContact(contact);
+    setOpenDeleteDialog(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deletingContact) return;
 
     if (isDemoMode) {
       // Demo mode - remove from localStorage
       const demoContacts = getDemoContacts();
-      const filtered = demoContacts.filter(c => c.id !== id);
+      const filtered = demoContacts.filter(c => c.id !== deletingContact.id);
       saveDemoContacts(filtered);
       showSnackbar('Contact deleted successfully', 'success');
       fetchContacts();
+      setOpenDeleteDialog(false);
+      setDeletingContact(null);
       return;
     }
 
     // Real API mode
     try {
-      const response = await fetch(`${API_URL}/api/contacts/${id}`, {
+      const response = await fetch(`${API_URL}/api/contacts/${deletingContact.id}`, {
         method: 'DELETE',
         credentials: 'include',
       });
@@ -276,6 +283,14 @@ const ContactsList = () => {
       console.error('Error deleting contact:', error);
       showSnackbar('Error deleting contact', 'error');
     }
+    
+    setOpenDeleteDialog(false);
+    setDeletingContact(null);
+  };
+
+  const handleDeleteCancel = () => {
+    setOpenDeleteDialog(false);
+    setDeletingContact(null);
   };
 
   const showSnackbar = (message, severity) => {
