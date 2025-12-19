@@ -247,6 +247,17 @@ const ContactsList = () => {
   const handleDelete = async (id) => {
     if (!window.confirm('Are you sure you want to delete this contact?')) return;
 
+    if (isDemoMode) {
+      // Demo mode - remove from localStorage
+      const demoContacts = getDemoContacts();
+      const filtered = demoContacts.filter(c => c.id !== id);
+      saveDemoContacts(filtered);
+      showSnackbar('Contact deleted successfully', 'success');
+      fetchContacts();
+      return;
+    }
+
+    // Real API mode
     try {
       const response = await fetch(`${API_URL}/api/contacts/${id}`, {
         method: 'DELETE',
