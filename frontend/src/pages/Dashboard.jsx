@@ -57,10 +57,10 @@ const StatCard = ({ title, value, icon: Icon, trend }) => (
         </Box>
         <Box
           sx={{
-            bgcolor: 'primary.main',
-            color: 'white',
+            bgcolor: 'primary.light',
+            color: 'primary.main',
             p: 1.5,
-            borderRadius: 1,
+            borderRadius: 2,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
