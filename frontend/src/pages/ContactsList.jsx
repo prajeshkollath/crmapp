@@ -176,6 +176,36 @@ const ContactsList = () => {
   };
 
   const handleSubmit = async () => {
+    if (isDemoMode) {
+      // Demo mode - save to localStorage
+      const demoContacts = getDemoContacts();
+      const payload = {
+        ...formData,
+        tags: formData.tags ? formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag) : [],
+        tenant_id: 'demo-tenant-123'
+      };
+
+      if (editingContact) {
+        const index = demoContacts.findIndex(c => c.id === editingContact.id);
+        if (index !== -1) {
+          demoContacts[index] = { ...editingContact, ...payload };
+        }
+      } else {
+        payload.id = 'demo-' + Date.now();
+        demoContacts.push(payload);
+      }
+      
+      saveDemoContacts(demoContacts);
+      showSnackbar(
+        editingContact ? 'Contact updated successfully' : 'Contact created successfully',
+        'success'
+      );
+      handleCloseDialog();
+      fetchContacts();
+      return;
+    }
+
+    // Real API mode
     try {
       const payload = {
         ...formData,
