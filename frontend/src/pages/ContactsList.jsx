@@ -463,7 +463,7 @@ const ContactsList = () => {
                       </IconButton>
                       <IconButton
                         size="small"
-                        onClick={() => handleDelete(contact.id)}
+                        onClick={() => handleDeleteClick(contact)}
                         data-testid={`delete-contact-${contact.id}`}
                       >
                         <Trash2 size={16} />
