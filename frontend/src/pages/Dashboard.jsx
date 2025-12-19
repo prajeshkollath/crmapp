@@ -149,7 +149,7 @@ const Dashboard = ({ user }) => {
       y: {
         beginAtZero: true,
         grid: {
-          color: '#E4E4E7',
+          color: '#E2E8F0',
         },
       },
       x: {
