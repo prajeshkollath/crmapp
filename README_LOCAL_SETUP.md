@@ -24,11 +24,15 @@ cd /app
 
 # 2. Start everything
 docker-compose -f docker-compose.local.yml up --build
+# Or if docker-compose doesn't work:
+# docker compose -f docker-compose.local.yml up --build
 
 # 3. Open browser
 # Frontend: http://localhost:3000
 # API Docs: http://localhost:8001/docs
 ```
+
+**Note:** Use `docker compose` (space) if `docker-compose` (hyphen) doesn't work.
 
 **That's it!** Wait 3-5 minutes for first build, then access http://localhost:3000
 
