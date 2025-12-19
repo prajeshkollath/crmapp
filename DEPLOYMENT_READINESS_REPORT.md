@@ -127,7 +127,7 @@ CORS_ORIGINS=https://your-domain.com,https://www.your-domain.com
 #### Issue 2.1: Frontend .env Points to Preview
 **Current:**
 ```env
-REACT_APP_BACKEND_URL=https://marketing-hub-147.preview.emergentagent.com
+REACT_APP_BACKEND_URL=https://crm-platform-24.preview.emergentagent.com
 ```
 
 **Issue:** Points to Emergent preview, not production
