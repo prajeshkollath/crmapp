@@ -89,9 +89,13 @@ const Dashboard = ({ user }) => {
       if (response.ok) {
         const data = await response.json();
         setContactsCount(data.total || 0);
+      } else if (response.status === 401) {
+        // Use demo data for unauthorized
+        setContactsCount(0);
       }
     } catch (error) {
       console.error('Error fetching contacts:', error);
+      setContactsCount(0);
     } finally {
       setLoading(false);
     }
