@@ -70,6 +70,8 @@ const ContactsList = () => {
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [openDialog, setOpenDialog] = useState(false);
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+  const [deletingContact, setDeletingContact] = useState(null);
   const [editingContact, setEditingContact] = useState(null);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
   const [isDemoMode, setIsDemoMode] = useState(false);
