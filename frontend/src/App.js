@@ -175,6 +175,15 @@ function MainLayout({ children, user }) {
   );
 }
 
+function RootRedirect() {
+  // Check if user is logged in
+  const demoUser = sessionStorage.getItem('demo_user');
+  if (demoUser) {
+    return <Navigate to="/dashboard" replace />;
+  }
+  return <Navigate to="/login" replace />;
+}
+
 function App() {
   return (
     <ThemeProvider theme={theme}>
@@ -212,7 +221,7 @@ function App() {
               </AuthCheck>
             }
           />
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/" element={<RootRedirect />} />
         </Routes>
       </BrowserRouter>
     </ThemeProvider>
