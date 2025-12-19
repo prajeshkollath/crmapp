@@ -25,6 +25,43 @@ import { Plus, Search, Edit, Trash2, Mail, Phone, Building } from 'lucide-react'
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
+// Demo mode helpers
+const DEMO_STORAGE_KEY = 'crm_demo_contacts';
+
+const getDemoContacts = () => {
+  const stored = localStorage.getItem(DEMO_STORAGE_KEY);
+  if (stored) {
+    return JSON.parse(stored);
+  }
+  // Return some initial demo data
+  return [
+    {
+      id: 'demo-1',
+      first_name: 'John',
+      last_name: 'Doe',
+      email: 'john.doe@example.com',
+      phone: '+1234567890',
+      company: 'Acme Corp',
+      tags: ['prospect', 'enterprise'],
+      tenant_id: 'demo-tenant-123'
+    },
+    {
+      id: 'demo-2',
+      first_name: 'Jane',
+      last_name: 'Smith',
+      email: 'jane.smith@techcorp.com',
+      phone: '+0987654321',
+      company: 'Tech Corp',
+      tags: ['customer', 'vip'],
+      tenant_id: 'demo-tenant-123'
+    }
+  ];
+};
+
+const saveDemoContacts = (contacts) => {
+  localStorage.setItem(DEMO_STORAGE_KEY, JSON.stringify(contacts));
+};
+
 const ContactsList = () => {
   const [contacts, setContacts] = useState([]);
   const [total, setTotal] = useState(0);
@@ -35,6 +72,7 @@ const ContactsList = () => {
   const [openDialog, setOpenDialog] = useState(false);
   const [editingContact, setEditingContact] = useState(null);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const [isDemoMode, setIsDemoMode] = useState(false);
   
   const [formData, setFormData] = useState({
     first_name: '',
