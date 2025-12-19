@@ -2,11 +2,15 @@ FROM node:18-alpine
 
 WORKDIR /app
 
-COPY frontend/package.json frontend/yarn.lock ./
+# Copy package files
+COPY frontend/package.json ./
+COPY frontend/yarn.lock ./
 
+# Install dependencies
 RUN yarn install
 
-COPY frontend/ .
+# Copy rest of the code
+COPY frontend/ ./
 
 EXPOSE 3000
 
