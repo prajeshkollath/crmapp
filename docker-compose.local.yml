@@ -44,8 +44,8 @@ services:
 
   frontend:
     build:
-      context: .
-      dockerfile: Dockerfile.frontend.local
+      context: ./frontend
+      dockerfile: ../Dockerfile.frontend.local
     container_name: crm-frontend-local
     environment:
       - REACT_APP_BACKEND_URL=http://localhost:8001
