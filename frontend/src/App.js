@@ -82,35 +82,41 @@ const theme = createTheme({
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 function AuthCheck({ children }) {
-  const [isAuthenticated, setIsAuthenticated] = useState(null);
-  const [user, setUser] = useState(null);
+  // Check for demo user immediately (synchronously)
+  const getDemoUser = () => {
+    const demoUser = sessionStorage.getItem('demo_user');
+    if (demoUser) {
+      try {
+        return JSON.parse(demoUser);
+      } catch (e) {
+        console.error('Error parsing demo user:', e);
+        sessionStorage.removeItem('demo_user');
+      }
+    }
+    return null;
+  };
+
+  const initialDemoUser = getDemoUser();
+  const [isAuthenticated, setIsAuthenticated] = useState(initialDemoUser ? true : null);
+  const [user, setUser] = useState(initialDemoUser);
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
+    // If we already have a demo user from initial state, don't do anything
+    if (initialDemoUser) {
+      return;
+    }
+
     const authenticateUser = async () => {
-      // Priority 1: Check if user passed via navigation state (demo mode)
+      // Check if user passed via navigation state (demo mode)
       if (location.state?.user) {
         setIsAuthenticated(true);
         setUser(location.state.user);
         return;
       }
 
-      // Priority 2: Check sessionStorage for demo user
-      const demoUser = sessionStorage.getItem('demo_user');
-      if (demoUser) {
-        try {
-          const userData = JSON.parse(demoUser);
-          setIsAuthenticated(true);
-          setUser(userData);
-          return;
-        } catch (e) {
-          console.error('Error parsing demo user:', e);
-          sessionStorage.removeItem('demo_user');
-        }
-      }
-
-      // Priority 3: Try real authentication (only if no demo user)
+      // Try real authentication
       try {
         const response = await fetch(`${API_URL}/api/auth/me`, {
           credentials: 'include'
@@ -127,7 +133,7 @@ function AuthCheck({ children }) {
     };
 
     authenticateUser();
-  }, [location, navigate]);
+  }, [location, navigate, initialDemoUser]);
 
   if (isAuthenticated === null) {
     return (
