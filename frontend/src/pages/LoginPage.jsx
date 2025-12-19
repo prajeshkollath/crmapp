@@ -10,7 +10,17 @@ const LoginPage = () => {
   const navigate = useNavigate();
 
   const handleDemoLogin = () => {
-    navigate('/dashboard');
+    // Create demo user and store in sessionStorage
+    const demoUser = {
+      id: 'demo-user-123',
+      name: 'Demo User',
+      email: 'demo@example.com',
+      picture: 'https://images.unsplash.com/photo-1689600944138-da3b150d9cb8?w=150&h=150&fit=crop',
+      tenant_id: 'demo-tenant-123'
+    };
+    
+    sessionStorage.setItem('demo_user', JSON.stringify(demoUser));
+    navigate('/dashboard', { state: { user: demoUser } });
   };
 
   return (
