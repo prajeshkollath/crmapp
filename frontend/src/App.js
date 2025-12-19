@@ -10,6 +10,7 @@ import Dashboard from './pages/Dashboard';
 import ContactsList from './pages/ContactsList';
 import AuditLogs from './pages/AuditLogs';
 import LoginPage from './pages/LoginPage';
+import AuthCallback from './pages/AuthCallback';
 
 const theme = createTheme({
   palette: {
