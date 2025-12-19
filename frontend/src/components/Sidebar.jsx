@@ -31,8 +31,8 @@ const Sidebar = ({ user, onLogout }) => {
     <Box
       sx={{
         width: 256,
-        bgcolor: '#FAFAFA',
-        borderRight: '1px solid #E4E4E7',
+        bgcolor: '#FFFFFF',
+        borderRight: '1px solid #E2E8F0',
         height: '100vh',
         position: 'fixed',
         left: 0,
@@ -43,7 +43,7 @@ const Sidebar = ({ user, onLogout }) => {
     >
       {/* Logo */}
       <Box sx={{ p: 3 }}>
-        <Typography variant="h6" sx={{ fontWeight: 700, color: '#002FA7' }}>
+        <Typography variant="h6" sx={{ fontWeight: 700, color: 'primary.main' }}>
           CRM Platform
         </Typography>
       </Box>
