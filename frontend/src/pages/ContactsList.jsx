@@ -487,7 +487,7 @@ const ContactsList = () => {
       </Paper>
 
       {/* Add/Edit Dialog */}
-      <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
+      <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="md" fullWidth>
         <DialogTitle>
           {editingContact ? 'Edit Contact' : 'Add New Contact'}
         </DialogTitle>
