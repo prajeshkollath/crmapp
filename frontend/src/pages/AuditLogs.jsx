@@ -25,9 +25,13 @@ const AuditLogs = () => {
       if (response.ok) {
         const data = await response.json();
         setLogs(data.logs || []);
+      } else if (response.status === 401) {
+        // Use empty data for unauthorized
+        setLogs([]);
       }
     } catch (error) {
       console.error('Error fetching logs:', error);
+      setLogs([]);
     } finally {
       setLoading(false);
     }
