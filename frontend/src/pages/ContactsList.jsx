@@ -86,13 +86,7 @@ const ContactsList = () => {
   const fetchContacts = React.useCallback(async () => {
     setLoading(true);
     try {
-      const params = new URLSearchParams({
-        page: page + 1,
-        page_size: rowsPerPage,
-      });
-      if (search) params.append('search', search);
-
-      const response = await fetch(`${API_URL}/api/contacts?${params}`, {
+      const response = await fetch(`${API_URL}/api/contacts?page=${page + 1}&page_size=${rowsPerPage}${search ? '&search=' + search : ''}`, {
         credentials: 'include'
       });
       
@@ -100,16 +94,33 @@ const ContactsList = () => {
         const data = await response.json();
         setContacts(data.contacts || []);
         setTotal(data.total || 0);
+        setIsDemoMode(false);
       } else if (response.status === 401) {
-        // Handle unauthorized - use demo data
-        setContacts([]);
-        setTotal(0);
+        // Use demo mode
+        setIsDemoMode(true);
+        const demoContacts = getDemoContacts();
+        const filtered = search 
+          ? demoContacts.filter(c => 
+              c.first_name.toLowerCase().includes(search.toLowerCase()) ||
+              c.last_name.toLowerCase().includes(search.toLowerCase()) ||
+              c.email.toLowerCase().includes(search.toLowerCase())
+            )
+          : demoContacts;
+        
+        const start = page * rowsPerPage;
+        const end = start + rowsPerPage;
+        setContacts(filtered.slice(start, end));
+        setTotal(filtered.length);
       }
     } catch (error) {
       console.error('Error fetching contacts:', error);
-      // Set empty data instead of showing error for demo mode
-      setContacts([]);
-      setTotal(0);
+      // Fallback to demo mode
+      setIsDemoMode(true);
+      const demoContacts = getDemoContacts();
+      const start = page * rowsPerPage;
+      const end = start + rowsPerPage;
+      setContacts(demoContacts.slice(start, end));
+      setTotal(demoContacts.length);
     } finally {
       setLoading(false);
     }
