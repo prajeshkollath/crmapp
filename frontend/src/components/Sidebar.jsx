@@ -60,10 +60,10 @@ const Sidebar = ({ user, onLogout }) => {
                 onClick={() => navigate(item.path)}
                 sx={{
                   borderRadius: 1,
-                  bgcolor: isActive ? '#002FA7' : 'transparent',
-                  color: isActive ? '#FFFFFF' : '#0A0A0A',
+                  bgcolor: isActive ? 'primary.main' : 'transparent',
+                  color: isActive ? '#FFFFFF' : 'text.primary',
                   '&:hover': {
-                    bgcolor: isActive ? '#002FA7' : '#F4F4F5',
+                    bgcolor: isActive ? 'primary.main' : 'secondary.main',
                   },
                 }}
                 data-testid={`sidebar-${item.text.toLowerCase().replace(' ', '-')}`}
