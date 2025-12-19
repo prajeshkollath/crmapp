@@ -51,11 +51,22 @@ const LoginPage = () => {
             fullWidth
             variant="contained"
             size="large"
+            onClick={handleGoogleLogin}
+            data-testid="google-login-btn"
+            sx={{ py: 1.5, mb: 2 }}
+          >
+            Sign in with Google
+          </Button>
+
+          <Button
+            fullWidth
+            variant="outlined"
+            size="large"
             onClick={handleDemoLogin}
             data-testid="demo-login-btn"
             sx={{ py: 1.5 }}
           >
-            View Dashboard
+            Try Demo Mode
           </Button>
 
           <Box sx={{ mt: 3, textAlign: 'center' }}>
