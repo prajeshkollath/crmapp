@@ -88,28 +88,29 @@ function AuthCheck({ children }) {
   const location = useLocation();
 
   useEffect(() => {
-    // Check if user passed via navigation state (demo mode)
-    if (location.state?.user) {
-      setIsAuthenticated(true);
-      setUser(location.state.user);
-      return;
-    }
-
-    // Check sessionStorage for demo user
-    const demoUser = sessionStorage.getItem('demo_user');
-    if (demoUser) {
-      try {
-        const userData = JSON.parse(demoUser);
+    const authenticateUser = async () => {
+      // Priority 1: Check if user passed via navigation state (demo mode)
+      if (location.state?.user) {
         setIsAuthenticated(true);
-        setUser(userData);
+        setUser(location.state.user);
         return;
-      } catch (e) {
-        console.error('Error parsing demo user:', e);
       }
-    }
 
-    // Try real authentication
-    const checkAuth = async () => {
+      // Priority 2: Check sessionStorage for demo user
+      const demoUser = sessionStorage.getItem('demo_user');
+      if (demoUser) {
+        try {
+          const userData = JSON.parse(demoUser);
+          setIsAuthenticated(true);
+          setUser(userData);
+          return;
+        } catch (e) {
+          console.error('Error parsing demo user:', e);
+          sessionStorage.removeItem('demo_user');
+        }
+      }
+
+      // Priority 3: Try real authentication (only if no demo user)
       try {
         const response = await fetch(`${API_URL}/api/auth/me`, {
           credentials: 'include'
@@ -120,11 +121,12 @@ function AuthCheck({ children }) {
         setUser(userData);
       } catch (error) {
         // If auth fails, redirect to login
+        console.log('Authentication failed, redirecting to login');
         setIsAuthenticated(false);
       }
     };
 
-    checkAuth();
+    authenticateUser();
   }, [location, navigate]);
 
   if (isAuthenticated === null) {
