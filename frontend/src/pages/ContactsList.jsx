@@ -379,8 +379,14 @@ const ContactsList = ({ className }) => {
     }
 
     try {
+      const headers = {};
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      
       const response = await fetch(`${API_URL}/api/contacts/${deletingContact.id}`, {
         method: 'DELETE',
+        headers,
         credentials: 'include',
       });
 
