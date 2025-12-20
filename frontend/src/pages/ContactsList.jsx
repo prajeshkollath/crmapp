@@ -175,9 +175,19 @@ const ContactsList = ({ className }) => {
   const fetchContacts = useCallback(async () => {
     setLoading(true);
     try {
+      const headers = {
+        'Content-Type': 'application/json',
+      };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      
       const response = await fetch(
         `${API_URL}/api/contacts?page=${page + 1}&page_size=${pageSize}${globalSearch ? '&search=' + globalSearch : ''}`,
-        { credentials: 'include' }
+        { 
+          headers,
+          credentials: 'include' 
+        }
       );
       
       if (response.ok) {
@@ -186,7 +196,7 @@ const ContactsList = ({ className }) => {
         setTotal(data.total || 0);
         setIsDemoMode(false);
       } else if (response.status === 401) {
-        // Use demo mode
+        // Use demo mode if not authenticated
         setIsDemoMode(true);
         loadDemoData();
       }
@@ -197,7 +207,7 @@ const ContactsList = ({ className }) => {
     } finally {
       setLoading(false);
     }
-  }, [page, pageSize, globalSearch, loadDemoData]);
+  }, [page, pageSize, globalSearch, loadDemoData, token]);
 
   useEffect(() => {
     if (isDemoMode) {
