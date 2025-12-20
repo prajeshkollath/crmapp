@@ -116,7 +116,11 @@ const ContactsList = () => {
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [deletingContact, setDeletingContact] = useState(null);
   const [editingContact, setEditingContact] = useState(null);
-  const [isDemoMode, setIsDemoMode] = useState(false);
+  const [isDemoMode, setIsDemoMode] = useState(() => {
+    // Check if we're in demo mode on initialization
+    const demoUser = sessionStorage.getItem('demo_user');
+    return demoUser ? true : false;
+  });
   const { toast } = useToast();
   
   const [formData, setFormData] = useState({
