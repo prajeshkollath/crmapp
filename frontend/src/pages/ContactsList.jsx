@@ -1,27 +1,43 @@
-import React, { useState, useEffect } from 'react';
-import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
-import Button from '@mui/material/Button';
-import TextField from '@mui/material/TextField';
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import TableContainer from '@mui/material/TableContainer';
-import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
-import TablePagination from '@mui/material/TablePagination';
-import Paper from '@mui/material/Paper';
-import IconButton from '@mui/material/IconButton';
-import Chip from '@mui/material/Chip';
-import Dialog from '@mui/material/Dialog';
-import DialogTitle from '@mui/material/DialogTitle';
-import DialogContent from '@mui/material/DialogContent';
-import DialogActions from '@mui/material/DialogActions';
-import Grid from '@mui/material/Grid';
-import Snackbar from '@mui/material/Snackbar';
-import Alert from '@mui/material/Alert';
-import InputAdornment from '@mui/material/InputAdornment';
-import { Plus, Search, Edit, Trash2, Mail, Phone, Building } from 'lucide-react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { Header } from '../components/layout';
+import { FilteredTable } from '../components/common';
+import { Button } from '../components/ui/button';
+import { Input } from '../components/ui/input';
+import { Label } from '../components/ui/label';
+import { Badge } from '../components/ui/badge';
+import { Textarea } from '../components/ui/textarea';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '../components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '../components/ui/alert-dialog';
+import { useToast } from '../hooks/use-toast';
+import { Toaster } from '../components/ui/toaster';
+import { 
+  Plus, 
+  Search, 
+  Edit, 
+  Trash2, 
+  Mail, 
+  Phone, 
+  Building, 
+  User,
+  UserPlus,
+} from 'lucide-react';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -33,28 +49,56 @@ const getDemoContacts = () => {
   if (stored) {
     return JSON.parse(stored);
   }
-  // Return some initial demo data
+  // Return initial demo data
   return [
     {
       id: 'demo-1',
       first_name: 'John',
       last_name: 'Doe',
       email: 'john.doe@example.com',
-      phone: '+1234567890',
-      company: 'Acme Corp',
+      phone: '+1 (555) 123-4567',
+      company: 'Acme Corporation',
+      status: 'active',
       tags: ['prospect', 'enterprise'],
-      tenant_id: 'demo-tenant-123'
+      tenant_id: 'demo-tenant-123',
+      created_at: new Date().toISOString(),
     },
     {
       id: 'demo-2',
       first_name: 'Jane',
       last_name: 'Smith',
       email: 'jane.smith@techcorp.com',
-      phone: '+0987654321',
+      phone: '+1 (555) 987-6543',
       company: 'Tech Corp',
+      status: 'active',
       tags: ['customer', 'vip'],
-      tenant_id: 'demo-tenant-123'
-    }
+      tenant_id: 'demo-tenant-123',
+      created_at: new Date().toISOString(),
+    },
+    {
+      id: 'demo-3',
+      first_name: 'Robert',
+      last_name: 'Johnson',
+      email: 'robert.j@innovate.io',
+      phone: '+1 (555) 456-7890',
+      company: 'Innovate Inc',
+      status: 'inactive',
+      tags: ['lead'],
+      tenant_id: 'demo-tenant-123',
+      created_at: new Date().toISOString(),
+    },
+    {
+      id: 'demo-4',
+      first_name: 'Emily',
+      last_name: 'Davis',
+      email: 'emily.davis@startup.co',
+      phone: '+1 (555) 321-0987',
+      company: 'Startup Co',
+      status: 'pending',
+      tags: ['prospect'],
+      tenant_id: 'demo-tenant-123',
+      created_at: new Date().toISOString(),
+    },
   ];
 };
 
@@ -66,15 +110,16 @@ const ContactsList = () => {
   const [contacts, setContacts] = useState([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [search, setSearch] = useState('');
+  const [pageSize, setPageSize] = useState(10);
+  const [globalSearch, setGlobalSearch] = useState('');
+  const [filters, setFilters] = useState({});
   const [loading, setLoading] = useState(true);
   const [openDialog, setOpenDialog] = useState(false);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [deletingContact, setDeletingContact] = useState(null);
   const [editingContact, setEditingContact] = useState(null);
-  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
   const [isDemoMode, setIsDemoMode] = useState(false);
+  const { toast } = useToast();
   
   const [formData, setFormData] = useState({
     first_name: '',
@@ -82,15 +127,17 @@ const ContactsList = () => {
     email: '',
     phone: '',
     company: '',
+    status: 'active',
     tags: '',
   });
 
-  const fetchContacts = React.useCallback(async () => {
+  const fetchContacts = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${API_URL}/api/contacts?page=${page + 1}&page_size=${rowsPerPage}${search ? '&search=' + search : ''}`, {
-        credentials: 'include'
-      });
+      const response = await fetch(
+        `${API_URL}/api/contacts?page=${page + 1}&page_size=${pageSize}${globalSearch ? '&search=' + globalSearch : ''}`,
+        { credentials: 'include' }
+      );
       
       if (response.ok) {
         const data = await response.json();
@@ -99,38 +146,65 @@ const ContactsList = () => {
         setIsDemoMode(false);
       } else if (response.status === 401) {
         // Use demo mode
-        setIsDemoMode(true);
-        const demoContacts = getDemoContacts();
-        const filtered = search 
-          ? demoContacts.filter(c => 
-              c.first_name.toLowerCase().includes(search.toLowerCase()) ||
-              c.last_name.toLowerCase().includes(search.toLowerCase()) ||
-              c.email.toLowerCase().includes(search.toLowerCase())
-            )
-          : demoContacts;
-        
-        const start = page * rowsPerPage;
-        const end = start + rowsPerPage;
-        setContacts(filtered.slice(start, end));
-        setTotal(filtered.length);
+        useDemoMode();
       }
     } catch (error) {
       console.error('Error fetching contacts:', error);
-      // Fallback to demo mode
-      setIsDemoMode(true);
-      const demoContacts = getDemoContacts();
-      const start = page * rowsPerPage;
-      const end = start + rowsPerPage;
-      setContacts(demoContacts.slice(start, end));
-      setTotal(demoContacts.length);
+      useDemoMode();
     } finally {
       setLoading(false);
     }
-  }, [page, rowsPerPage, search]);
+  }, [page, pageSize, globalSearch]);
+
+  const useDemoMode = useCallback(() => {
+    setIsDemoMode(true);
+    let demoContacts = getDemoContacts();
+    
+    // Apply global search
+    if (globalSearch) {
+      const search = globalSearch.toLowerCase();
+      demoContacts = demoContacts.filter(c =>
+        c.first_name.toLowerCase().includes(search) ||
+        c.last_name.toLowerCase().includes(search) ||
+        c.email.toLowerCase().includes(search) ||
+        c.company?.toLowerCase().includes(search)
+      );
+    }
+
+    // Apply column filters
+    if (filters.name) {
+      const nameFilter = filters.name.toLowerCase();
+      demoContacts = demoContacts.filter(c =>
+        `${c.first_name} ${c.last_name}`.toLowerCase().includes(nameFilter)
+      );
+    }
+    if (filters.email) {
+      demoContacts = demoContacts.filter(c =>
+        c.email.toLowerCase().includes(filters.email.toLowerCase())
+      );
+    }
+    if (filters.company) {
+      demoContacts = demoContacts.filter(c =>
+        c.company?.toLowerCase().includes(filters.company.toLowerCase())
+      );
+    }
+    if (filters.status && filters.status !== 'all') {
+      demoContacts = demoContacts.filter(c => c.status === filters.status);
+    }
+    
+    const start = page * pageSize;
+    const end = start + pageSize;
+    setContacts(demoContacts.slice(start, end));
+    setTotal(demoContacts.length);
+  }, [globalSearch, filters, page, pageSize]);
 
   useEffect(() => {
-    fetchContacts();
-  }, [fetchContacts]);
+    if (isDemoMode) {
+      useDemoMode();
+    } else {
+      fetchContacts();
+    }
+  }, [fetchContacts, isDemoMode, useDemoMode, filters]);
 
   const handleOpenDialog = (contact = null) => {
     if (contact) {
@@ -141,6 +215,7 @@ const ContactsList = () => {
         email: contact.email,
         phone: contact.phone || '',
         company: contact.company || '',
+        status: contact.status || 'active',
         tags: Array.isArray(contact.tags) ? contact.tags.join(', ') : '',
       });
     } else {
@@ -151,6 +226,7 @@ const ContactsList = () => {
         email: '',
         phone: '',
         company: '',
+        status: 'active',
         tags: '',
       });
     }
@@ -166,6 +242,7 @@ const ContactsList = () => {
       email: '',
       phone: '',
       company: '',
+      status: 'active',
       tags: '',
     });
   };
@@ -177,14 +254,17 @@ const ContactsList = () => {
     });
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
     if (isDemoMode) {
       // Demo mode - save to localStorage
       const demoContacts = getDemoContacts();
       const payload = {
         ...formData,
         tags: formData.tags ? formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag) : [],
-        tenant_id: 'demo-tenant-123'
+        tenant_id: 'demo-tenant-123',
+        created_at: new Date().toISOString(),
       };
 
       if (editingContact) {
@@ -198,12 +278,12 @@ const ContactsList = () => {
       }
       
       saveDemoContacts(demoContacts);
-      showSnackbar(
-        editingContact ? 'Contact updated successfully' : 'Contact created successfully',
-        'success'
-      );
+      toast({
+        title: editingContact ? 'Contact updated' : 'Contact created',
+        description: `${formData.first_name} ${formData.last_name} has been ${editingContact ? 'updated' : 'added'} successfully.`,
+      });
       handleCloseDialog();
-      fetchContacts();
+      useDemoMode();
       return;
     }
 
@@ -218,31 +298,35 @@ const ContactsList = () => {
         ? `${API_URL}/api/contacts/${editingContact.id}`
         : `${API_URL}/api/contacts`;
 
-      const method = editingContact ? 'PUT' : 'POST';
-
       const response = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        method: editingContact ? 'PUT' : 'POST',
+        headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify(payload),
       });
 
       if (response.ok) {
-        showSnackbar(
-          editingContact ? 'Contact updated successfully' : 'Contact created successfully',
-          'success'
-        );
+        toast({
+          title: editingContact ? 'Contact updated' : 'Contact created',
+          description: `${formData.first_name} ${formData.last_name} has been ${editingContact ? 'updated' : 'added'} successfully.`,
+        });
         handleCloseDialog();
         fetchContacts();
       } else {
         const error = await response.json();
-        showSnackbar(error.detail || 'Error saving contact', 'error');
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: error.detail || 'Failed to save contact',
+        });
       }
     } catch (error) {
       console.error('Error saving contact:', error);
-      showSnackbar('Error saving contact', 'error');
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to save contact',
+      });
     }
   };
 
@@ -255,18 +339,19 @@ const ContactsList = () => {
     if (!deletingContact) return;
 
     if (isDemoMode) {
-      // Demo mode - remove from localStorage
       const demoContacts = getDemoContacts();
       const filtered = demoContacts.filter(c => c.id !== deletingContact.id);
       saveDemoContacts(filtered);
-      showSnackbar('Contact deleted successfully', 'success');
-      fetchContacts();
+      toast({
+        title: 'Contact deleted',
+        description: `${deletingContact.first_name} ${deletingContact.last_name} has been removed.`,
+      });
       setOpenDeleteDialog(false);
       setDeletingContact(null);
+      useDemoMode();
       return;
     }
 
-    // Real API mode
     try {
       const response = await fetch(`${API_URL}/api/contacts/${deletingContact.id}`, {
         method: 'DELETE',
@@ -274,331 +359,361 @@ const ContactsList = () => {
       });
 
       if (response.ok) {
-        showSnackbar('Contact deleted successfully', 'success');
+        toast({
+          title: 'Contact deleted',
+          description: `${deletingContact.first_name} ${deletingContact.last_name} has been removed.`,
+        });
         fetchContacts();
       } else {
-        showSnackbar('Error deleting contact', 'error');
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Failed to delete contact',
+        });
       }
     } catch (error) {
       console.error('Error deleting contact:', error);
-      showSnackbar('Error deleting contact', 'error');
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to delete contact',
+      });
     }
     
     setOpenDeleteDialog(false);
     setDeletingContact(null);
   };
 
-  const handleDeleteCancel = () => {
-    setOpenDeleteDialog(false);
-    setDeletingContact(null);
-  };
+  // Table columns configuration
+  const columns = useMemo(() => [
+    {
+      id: 'name',
+      header: 'Name',
+      minWidth: '200px',
+      filterPlaceholder: 'Filter name...',
+      render: (row) => (
+        <div className="flex items-center gap-3">
+          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary font-medium">
+            {row.first_name?.charAt(0)}{row.last_name?.charAt(0)}
+          </div>
+          <div>
+            <p className="font-medium">{row.first_name} {row.last_name}</p>
+          </div>
+        </div>
+      ),
+    },
+    {
+      id: 'email',
+      header: 'Email',
+      minWidth: '220px',
+      filterPlaceholder: 'Filter email...',
+      render: (row) => (
+        <div className="flex items-center gap-2 text-muted-foreground">
+          <Mail className="h-4 w-4" />
+          <span>{row.email}</span>
+        </div>
+      ),
+    },
+    {
+      id: 'phone',
+      header: 'Phone',
+      minWidth: '160px',
+      filterPlaceholder: 'Filter phone...',
+      render: (row) => row.phone ? (
+        <div className="flex items-center gap-2 text-muted-foreground">
+          <Phone className="h-4 w-4" />
+          <span>{row.phone}</span>
+        </div>
+      ) : (
+        <span className="text-muted-foreground/50">-</span>
+      ),
+    },
+    {
+      id: 'company',
+      header: 'Company',
+      minWidth: '180px',
+      filterPlaceholder: 'Filter company...',
+      render: (row) => row.company ? (
+        <div className="flex items-center gap-2 text-muted-foreground">
+          <Building className="h-4 w-4" />
+          <span>{row.company}</span>
+        </div>
+      ) : (
+        <span className="text-muted-foreground/50">-</span>
+      ),
+    },
+    {
+      id: 'status',
+      header: 'Status',
+      width: '120px',
+      filterType: 'select',
+      filterOptions: [
+        { value: 'active', label: 'Active' },
+        { value: 'inactive', label: 'Inactive' },
+        { value: 'pending', label: 'Pending' },
+      ],
+      render: (row) => {
+        const status = row.status || 'active';
+        const variants = {
+          active: 'bg-emerald-100 text-emerald-700 hover:bg-emerald-100',
+          inactive: 'bg-gray-100 text-gray-700 hover:bg-gray-100',
+          pending: 'bg-amber-100 text-amber-700 hover:bg-amber-100',
+        };
+        return (
+          <Badge variant="secondary" className={variants[status]}>
+            {status.charAt(0).toUpperCase() + status.slice(1)}
+          </Badge>
+        );
+      },
+    },
+    {
+      id: 'tags',
+      header: 'Tags',
+      minWidth: '200px',
+      filterable: false,
+      render: (row) => (
+        <div className="flex flex-wrap gap-1">
+          {Array.isArray(row.tags) && row.tags.length > 0 ? (
+            row.tags.map((tag, index) => (
+              <Badge key={index} variant="outline" className="text-xs">
+                {tag}
+              </Badge>
+            ))
+          ) : (
+            <span className="text-muted-foreground/50">-</span>
+          )}
+        </div>
+      ),
+    },
+  ], []);
 
-  const showSnackbar = (message, severity) => {
-    setSnackbar({ open: true, message, severity });
-  };
-
-  const handleCloseSnackbar = () => {
-    setSnackbar({ ...snackbar, open: false });
-  };
-
-  const handleChangePage = (event, newPage) => {
-    setPage(newPage);
-  };
-
-  const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
-  };
+  const rowActions = useMemo(() => [
+    {
+      label: 'Edit',
+      icon: Edit,
+      onClick: handleOpenDialog,
+    },
+    {
+      label: 'Delete',
+      icon: Trash2,
+      destructive: true,
+      onClick: handleDeleteClick,
+    },
+  ], []);
 
   return (
-    <Box>
-      {/* Header */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Box>
-          <Typography variant="h4" gutterBottom sx={{ fontWeight: 700 }}>
-            Contacts
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            {total} total contacts
-          </Typography>
-        </Box>
-        <Button
-          variant="contained"
-          startIcon={<Plus size={18} />}
-          onClick={() => handleOpenDialog()}
-          data-testid="add-contact-btn"
-        >
-          Add Contact
-        </Button>
-      </Box>
+    <div>
+      <Toaster />
+      
+      <Header
+        title="Contacts"
+        subtitle={`${total} total contacts`}
+        breadcrumbs={[
+          { label: 'Home', href: '/' },
+          { label: 'Contacts' },
+        ]}
+        actionLabel="Add Contact"
+        actionIcon={Plus}
+        onAction={() => handleOpenDialog()}
+      />
 
-      {/* Search */}
-      <Box sx={{ mb: 3 }}>
-        <TextField
-          fullWidth
-          placeholder="Search by name, email, or phone..."
-          value={search}
-          onChange={(e) => {
-            setSearch(e.target.value);
-            setPage(0);
-          }}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <Search size={20} />
-              </InputAdornment>
-            ),
-          }}
-          data-testid="search-input"
-        />
-      </Box>
+      {/* Global Search */}
+      <div className="mb-6">
+        <div className="relative max-w-md">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            type="text"
+            placeholder="Search contacts..."
+            value={globalSearch}
+            onChange={(e) => {
+              setGlobalSearch(e.target.value);
+              setPage(0);
+            }}
+            className="pl-10"
+            data-testid="search-input"
+          />
+        </div>
+      </div>
 
-      {/* Table */}
-      <Paper sx={{ width: '100%', overflow: 'hidden' }}>
-        <TableContainer>
-          <Table data-testid="contacts-table">
-            <TableHead>
-              <TableRow sx={{ bgcolor: '#FAFAFA' }}>
-                <TableCell sx={{ fontWeight: 600, textTransform: 'uppercase', fontSize: '0.75rem', color: 'text.secondary' }}>
-                  Name
-                </TableCell>
-                <TableCell sx={{ fontWeight: 600, textTransform: 'uppercase', fontSize: '0.75rem', color: 'text.secondary' }}>
-                  Email
-                </TableCell>
-                <TableCell sx={{ fontWeight: 600, textTransform: 'uppercase', fontSize: '0.75rem', color: 'text.secondary' }}>
-                  Phone
-                </TableCell>
-                <TableCell sx={{ fontWeight: 600, textTransform: 'uppercase', fontSize: '0.75rem', color: 'text.secondary' }}>
-                  Company
-                </TableCell>
-                <TableCell sx={{ fontWeight: 600, textTransform: 'uppercase', fontSize: '0.75rem', color: 'text.secondary' }}>
-                  Tags
-                </TableCell>
-                <TableCell align="right" sx={{ fontWeight: 600, textTransform: 'uppercase', fontSize: '0.75rem', color: 'text.secondary' }}>
-                  Actions
-                </TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {loading ? (
-                <TableRow>
-                  <TableCell colSpan={6} align="center" sx={{ py: 8 }}>
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-                  </TableCell>
-                </TableRow>
-              ) : contacts.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={6} align="center" sx={{ py: 8 }}>
-                    <Typography variant="body1" color="text.secondary">
-                      No contacts found
-                    </Typography>
-                    <Button
-                      variant="text"
-                      onClick={() => handleOpenDialog()}
-                      sx={{ mt: 2 }}
-                    >
-                      Add your first contact
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ) : (
-                contacts.map((contact) => (
-                  <TableRow
-                    key={contact.id}
-                    hover
-                    sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
-                  >
-                    <TableCell>
-                      <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                        {contact.first_name} {contact.last_name}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Mail size={14} color="#71717A" />
-                        <Typography variant="body2" color="text.secondary">
-                          {contact.email}
-                        </Typography>
-                      </Box>
-                    </TableCell>
-                    <TableCell>
-                      {contact.phone && (
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <Phone size={14} color="#71717A" />
-                          <Typography variant="body2" color="text.secondary">
-                            {contact.phone}
-                          </Typography>
-                        </Box>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {contact.company && (
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <Building size={14} color="#71717A" />
-                          <Typography variant="body2" color="text.secondary">
-                            {contact.company}
-                          </Typography>
-                        </Box>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                        {Array.isArray(contact.tags) && contact.tags.map((tag, index) => (
-                          <Chip
-                            key={index}
-                            label={tag}
-                            size="small"
-                            sx={{ bgcolor: '#E0E7FF', color: '#002FA7', fontSize: '0.7rem' }}
-                          />
-                        ))}
-                      </Box>
-                    </TableCell>
-                    <TableCell align="right">
-                      <IconButton
-                        size="small"
-                        onClick={() => handleOpenDialog(contact)}
-                        data-testid={`edit-contact-${contact.id}`}
-                      >
-                        <Edit size={16} />
-                      </IconButton>
-                      <IconButton
-                        size="small"
-                        onClick={() => handleDeleteClick(contact)}
-                        data-testid={`delete-contact-${contact.id}`}
-                      >
-                        <Trash2 size={16} />
-                      </IconButton>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
-        <TablePagination
-          rowsPerPageOptions={[5, 10, 25, 50]}
-          component="div"
-          count={total}
-          rowsPerPage={rowsPerPage}
-          page={page}
-          onPageChange={handleChangePage}
-          onRowsPerPageChange={handleChangeRowsPerPage}
-        />
-      </Paper>
+      {/* Demo Mode Badge */}
+      {isDemoMode && (
+        <div className="mb-4">
+          <Badge variant="secondary" className="bg-amber-100 text-amber-800">
+            Demo Mode - Data stored locally
+          </Badge>
+        </div>
+      )}
+
+      {/* Filtered Table */}
+      <FilteredTable
+        columns={columns}
+        data={contacts}
+        loading={loading}
+        total={total}
+        page={page}
+        pageSize={pageSize}
+        onPageChange={setPage}
+        onPageSizeChange={(size) => {
+          setPageSize(size);
+          setPage(0);
+        }}
+        filters={filters}
+        onFilterChange={setFilters}
+        onClearFilters={() => setFilters({})}
+        rowActions={rowActions}
+        emptyState={
+          <div className="text-center py-8">
+            <UserPlus className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
+            <p className="text-lg font-medium text-foreground">No contacts found</p>
+            <p className="text-sm text-muted-foreground mt-1 mb-4">
+              Get started by adding your first contact
+            </p>
+            <Button onClick={() => handleOpenDialog()}>
+              <Plus className="h-4 w-4 mr-2" />
+              Add Contact
+            </Button>
+          </div>
+        }
+      />
 
       {/* Add/Edit Dialog */}
-      <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="md" fullWidth>
-        <DialogTitle>
-          {editingContact ? 'Edit Contact' : 'Add New Contact'}
-        </DialogTitle>
-        <DialogContent>
-          <Grid container spacing={2} sx={{ mt: 1 }}>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="First Name"
-                name="first_name"
-                value={formData.first_name}
-                onChange={handleChange}
-                required
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Last Name"
-                name="last_name"
-                value={formData.last_name}
-                onChange={handleChange}
-                required
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Email"
-                name="email"
-                type="email"
-                value={formData.email}
-                onChange={handleChange}
-                required
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Phone"
-                name="phone"
-                value={formData.phone}
-                onChange={handleChange}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Company"
-                name="company"
-                value={formData.company}
-                onChange={handleChange}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Tags (comma separated)"
-                name="tags"
-                value={formData.tags}
-                onChange={handleChange}
-                placeholder="e.g. prospect, vip, customer"
-                helperText="Separate tags with commas"
-              />
-            </Grid>
-          </Grid>
+      <Dialog open={openDialog} onOpenChange={setOpenDialog}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle className="text-xl">
+              {editingContact ? 'Edit Contact' : 'Add New Contact'}
+            </DialogTitle>
+            <DialogDescription>
+              {editingContact
+                ? 'Update the contact information below.'
+                : 'Fill in the details to create a new contact.'}
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleSubmit}>
+            <div className="grid gap-6 py-4">
+              {/* Name Row */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="first_name">First Name *</Label>
+                  <Input
+                    id="first_name"
+                    name="first_name"
+                    value={formData.first_name}
+                    onChange={handleChange}
+                    placeholder="John"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="last_name">Last Name *</Label>
+                  <Input
+                    id="last_name"
+                    name="last_name"
+                    value={formData.last_name}
+                    onChange={handleChange}
+                    placeholder="Doe"
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Email */}
+              <div className="space-y-2">
+                <Label htmlFor="email">Email *</Label>
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  placeholder="john@example.com"
+                  required
+                />
+              </div>
+
+              {/* Phone & Company Row */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="phone">Phone</Label>
+                  <Input
+                    id="phone"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    placeholder="+1 (555) 123-4567"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="company">Company</Label>
+                  <Input
+                    id="company"
+                    name="company"
+                    value={formData.company}
+                    onChange={handleChange}
+                    placeholder="Acme Inc"
+                  />
+                </div>
+              </div>
+
+              {/* Tags */}
+              <div className="space-y-2">
+                <Label htmlFor="tags">Tags</Label>
+                <Input
+                  id="tags"
+                  name="tags"
+                  value={formData.tags}
+                  onChange={handleChange}
+                  placeholder="prospect, vip, customer"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Separate multiple tags with commas
+                </p>
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={handleCloseDialog}>
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={!formData.first_name || !formData.last_name || !formData.email}
+                data-testid="submit-contact-btn"
+              >
+                {editingContact ? 'Update Contact' : 'Create Contact'}
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
-        <DialogActions sx={{ px: 3, pb: 2 }}>
-          <Button onClick={handleCloseDialog}>Cancel</Button>
-          <Button
-            onClick={handleSubmit}
-            variant="contained"
-            disabled={!formData.first_name || !formData.last_name || !formData.email}
-            data-testid="submit-contact-btn"
-          >
-            {editingContact ? 'Update' : 'Create'}
-          </Button>
-        </DialogActions>
       </Dialog>
 
       {/* Delete Confirmation Dialog */}
-      <Dialog open={openDeleteDialog} onClose={handleDeleteCancel}>
-        <DialogTitle>Delete Contact</DialogTitle>
-        <DialogContent>
-          <Typography>
-            Are you sure you want to delete {deletingContact?.first_name} {deletingContact?.last_name}?
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-            This action cannot be undone.
-          </Typography>
-        </DialogContent>
-        <DialogActions sx={{ px: 3, pb: 2 }}>
-          <Button onClick={handleDeleteCancel}>Cancel</Button>
-          <Button onClick={handleDeleteConfirm} variant="contained" color="error">
-            Delete
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Snackbar */}
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={6000}
-        onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-      >
-        <Alert onClose={handleCloseSnackbar} severity={snackbar.severity} sx={{ width: '100%' }}>
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
-    </Box>
+      <AlertDialog open={openDeleteDialog} onOpenChange={setOpenDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Contact</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete{' '}
+              <span className="font-medium text-foreground">
+                {deletingContact?.first_name} {deletingContact?.last_name}
+              </span>
+              ? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setDeletingContact(null)}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteConfirm}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
   );
 };
 
