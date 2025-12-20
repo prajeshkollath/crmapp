@@ -5,23 +5,11 @@ WORKDIR /app
 # Copy package files
 COPY package.json yarn.lock ./
 
-# Install dependencies
-RUN yarn install --frozen-lockfile
+# Install dependencies (without frozen-lockfile for flexibility)
+RUN yarn install
 
 # Copy source code
 COPY . .
-
-# Build args for environment variables
-ARG REACT_APP_BACKEND_URL
-ARG REACT_APP_FIREBASE_API_KEY
-ARG REACT_APP_FIREBASE_AUTH_DOMAIN
-ARG REACT_APP_FIREBASE_PROJECT_ID
-
-# Set environment variables
-ENV REACT_APP_BACKEND_URL=$REACT_APP_BACKEND_URL
-ENV REACT_APP_FIREBASE_API_KEY=$REACT_APP_FIREBASE_API_KEY
-ENV REACT_APP_FIREBASE_AUTH_DOMAIN=$REACT_APP_FIREBASE_AUTH_DOMAIN
-ENV REACT_APP_FIREBASE_PROJECT_ID=$REACT_APP_FIREBASE_PROJECT_ID
 
 EXPOSE 3000
 
