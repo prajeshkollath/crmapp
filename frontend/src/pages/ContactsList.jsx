@@ -25,6 +25,7 @@ import {
 } from '../components/ui/alert-dialog';
 import { useToast } from '../hooks/use-toast';
 import { Toaster } from '../components/ui/toaster';
+import { useAuth } from '../contexts/AuthContext';
 import { 
   Plus, 
   Search, 
