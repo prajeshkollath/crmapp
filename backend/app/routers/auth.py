@@ -79,8 +79,6 @@ async def update_profile(
 @router.post("/logout")
 async def logout(response: Response):
     """Logout - clears any server-side session data."""
-    # With Firebase auth, logout is primarily handled client-side
-    # This endpoint is for any server-side cleanup if needed
     response.delete_cookie("session_token", path="/")
     return {"message": "Logged out successfully"}
 
@@ -90,4 +88,30 @@ async def setup_tenant(
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
-    \"\"\"Create a tenant for the user if they don't have one.\"\"\"\n    if user.tenant_id:\n        return {\"message\": \"Tenant already exists\", \"tenant_id\": str(user.tenant_id)}\n    \n    # Create tenant from user email\n    slug = re.sub(r'[^a-z0-9]+', '-', user.email.split('@')[0].lower()).strip('-')\n    \n    # Check if slug exists\n    stmt = select(Tenant).where(Tenant.slug == slug)\n    result = await db.execute(stmt)\n    existing = result.scalar_one_or_none()\n    \n    if existing:\n        slug = f\"{slug}-{str(user.id)[:8]}\"\n    \n    tenant = Tenant(\n        name=f\"{user.name or user.email}'s Organization\",\n        slug=slug\n    )\n    db.add(tenant)\n    await db.flush()\n    \n    user.tenant_id = tenant.id\n    user.role = 'admin'  # First user of a tenant is admin\n    await db.commit()\n    \n    return {\"message\": \"Tenant created\", \"tenant_id\": str(tenant.id)}
+    """Create a tenant for the user if they don't have one."""
+    if user.tenant_id:
+        return {"message": "Tenant already exists", "tenant_id": str(user.tenant_id)}
+    
+    # Create tenant from user email
+    slug = re.sub(r'[^a-z0-9]+', '-', user.email.split('@')[0].lower()).strip('-')
+    
+    # Check if slug exists
+    stmt = select(Tenant).where(Tenant.slug == slug)
+    result = await db.execute(stmt)
+    existing = result.scalar_one_or_none()
+    
+    if existing:
+        slug = f"{slug}-{str(user.id)[:8]}"
+    
+    tenant = Tenant(
+        name=f"{user.name or user.email}'s Organization",
+        slug=slug
+    )
+    db.add(tenant)
+    await db.flush()
+    
+    user.tenant_id = tenant.id
+    user.role = 'admin'  # First user of a tenant is admin
+    await db.commit()
+    
+    return {"message": "Tenant created", "tenant_id": str(tenant.id)}
