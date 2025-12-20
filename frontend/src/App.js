@@ -1,99 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
-import CssBaseline from '@mui/material/CssBaseline';
-import Box from '@mui/material/Box';
 import './App.css';
 
-import Sidebar from './components/Sidebar';
+import { MainLayout } from './components/layout';
 import Dashboard from './pages/Dashboard';
 import ContactsList from './pages/ContactsList';
 import AuditLogs from './pages/AuditLogs';
 import LoginPage from './pages/LoginPage';
 import AuthCallback from './pages/AuthCallback';
 
-const theme = createTheme({
-  palette: {
-    mode: 'light',
-    primary: {
-      main: '#6366F1',
-      light: '#A5B4FC',
-      contrastText: '#FFFFFF',
-    },
-    secondary: {
-      main: '#F1F5F9',
-      contrastText: '#18181B',
-    },
-    background: {
-      default: '#F8FAFC',
-      paper: '#FFFFFF',
-    },
-    text: {
-      primary: '#1E293B',
-      secondary: '#64748B',
-    },
-    error: {
-      main: '#F87171',
-    },
-    success: {
-      main: '#4ADE80',
-    },
-    warning: {
-      main: '#FBBF24',
-    },
-    info: {
-      main: '#60A5FA',
-    },
-  },
-  typography: {
-    fontFamily: '"Work Sans", sans-serif',
-    h1: {
-      fontFamily: '"Manrope", sans-serif',
-      fontWeight: 700,
-      letterSpacing: '-0.02em',
-    },
-    h2: {
-      fontFamily: '"Manrope", sans-serif',
-      fontWeight: 600,
-      letterSpacing: '-0.01em',
-    },
-    h3: {
-      fontFamily: '"Manrope", sans-serif',
-      fontWeight: 600,
-    },
-    h6: {
-      fontFamily: '"Manrope", sans-serif',
-      fontWeight: 600,
-    },
-  },
-  shape: {
-    borderRadius: 2,
-  },
-  components: {
-    MuiButton: {
-      styleOverrides: {
-        root: {
-          textTransform: 'none',
-          fontWeight: 500,
-          borderRadius: 2,
-        },
-      },
-    },
-    MuiCard: {
-      styleOverrides: {
-        root: {
-          borderRadius: 2,
-          boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)',
-        },
-      },
-    },
-  },
-});
-
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 function AuthCheck({ children }) {
-  // Check for demo user immediately (synchronously)
   const getDemoUser = () => {
     const demoUser = sessionStorage.getItem('demo_user');
     if (demoUser) {
@@ -114,20 +32,17 @@ function AuthCheck({ children }) {
   const location = useLocation();
 
   useEffect(() => {
-    // If we already have a demo user from initial state, don't do anything
     if (initialDemoUser) {
       return;
     }
 
     const authenticateUser = async () => {
-      // Check if user passed via navigation state (demo mode)
       if (location.state?.user) {
         setIsAuthenticated(true);
         setUser(location.state.user);
         return;
       }
 
-      // Try real authentication
       try {
         const response = await fetch(`${API_URL}/api/auth/me`, {
           credentials: 'include'
@@ -137,7 +52,6 @@ function AuthCheck({ children }) {
         setIsAuthenticated(true);
         setUser(userData);
       } catch (error) {
-        // If auth fails, redirect to login
         console.log('Authentication failed, redirecting to login');
         setIsAuthenticated(false);
       }
@@ -148,9 +62,9 @@ function AuthCheck({ children }) {
 
   if (isAuthenticated === null) {
     return (
-      <Box display="flex" alignItems="center" justifyContent="center" minHeight="100vh">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-      </Box>
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
     );
   }
 
@@ -161,35 +75,7 @@ function AuthCheck({ children }) {
   return React.cloneElement(children, { user });
 }
 
-function MainLayout({ children, user }) {
-  const navigate = useNavigate();
-
-  const handleLogout = async () => {
-    try {
-      await fetch(`${API_URL}/api/auth/logout`, {
-        method: 'POST',
-        credentials: 'include'
-      });
-    } catch (error) {
-      console.error('Logout error:', error);
-    }
-    navigate('/login');
-  };
-
-  return (
-    <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'background.default' }}>
-      <Sidebar user={user} onLogout={handleLogout} />
-      <Box component="main" sx={{ flexGrow: 1, ml: '256px', p: 4, maxWidth: '100%', width: '100%' }}>
-        <Box sx={{ maxWidth: '1600px', mx: 'auto', width: '100%' }}>
-          {React.cloneElement(children, { user })}
-        </Box>
-      </Box>
-    </Box>
-  );
-}
-
 function RootRedirect() {
-  // Check if user is logged in
   const demoUser = sessionStorage.getItem('demo_user');
   if (demoUser) {
     return <Navigate to="/dashboard" replace />;
@@ -199,46 +85,43 @@ function RootRedirect() {
 
 function App() {
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/auth/callback" element={<AuthCallback />} />
-          <Route
-            path="/dashboard"
-            element={
-              <AuthCheck>
-                <MainLayout>
-                  <Dashboard />
-                </MainLayout>
-              </AuthCheck>
-            }
-          />
-          <Route
-            path="/contacts"
-            element={
-              <AuthCheck>
-                <MainLayout>
-                  <ContactsList />
-                </MainLayout>
-              </AuthCheck>
-            }
-          />
-          <Route
-            path="/audit"
-            element={
-              <AuthCheck>
-                <MainLayout>
-                  <AuditLogs />
-                </MainLayout>
-              </AuthCheck>
-            }
-          />
-          <Route path="/" element={<RootRedirect />} />
-        </Routes>
-      </BrowserRouter>
-    </ThemeProvider>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/auth/callback" element={<AuthCallback />} />
+        <Route
+          path="/dashboard"
+          element={
+            <AuthCheck>
+              <MainLayout>
+                <Dashboard />
+              </MainLayout>
+            </AuthCheck>
+          }
+        />
+        <Route
+          path="/contacts"
+          element={
+            <AuthCheck>
+              <MainLayout>
+                <ContactsList />
+              </MainLayout>
+            </AuthCheck>
+          }
+        />
+        <Route
+          path="/audit"
+          element={
+            <AuthCheck>
+              <MainLayout>
+                <AuditLogs />
+              </MainLayout>
+            </AuthCheck>
+          }
+        />
+        <Route path="/" element={<RootRedirect />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 
