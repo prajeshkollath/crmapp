@@ -203,6 +203,13 @@ const ContactsList = () => {
   }, [page, pageSize, globalSearch, loadDemoData]);
 
   useEffect(() => {
+    // Check for demo mode on mount
+    const demoUser = sessionStorage.getItem('demo_user');
+    if (demoUser && !isDemoMode) {
+      setIsDemoMode(true);
+      return;
+    }
+    
     if (isDemoMode) {
       loadDemoData();
       setLoading(false);
