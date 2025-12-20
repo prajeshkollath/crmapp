@@ -1,167 +1,93 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from datetime import datetime, timedelta, timezone
-import httpx
+from datetime import datetime, timezone
+from pydantic import BaseModel
+from typing import Optional
 import re
 
 from app.core.database import get_db
 from app.core.dependencies import get_current_user
-from app.models.user import User, UserSession
+from app.models.user import User
 from app.models.tenant import Tenant
-from app.models.role import Role
-from app.models.permission import Permission
-from app.schemas.auth import SessionDataResponse
-from app.schemas.user import UserWithRoles
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
-EMERGENT_AUTH_URL = "https://demobackend.emergentagent.com/auth/v1/env/oauth/session-data"
 
-@router.post("/session", response_model=SessionDataResponse)
-async def process_session(
-    session_id: str,
-    response: Response,
-    db: AsyncSession = Depends(get_db)
-):
-    async with httpx.AsyncClient() as client:
-        try:
-            auth_response = await client.get(
-                EMERGENT_AUTH_URL,
-                headers={"X-Session-ID": session_id},
-                timeout=10.0
-            )
-            auth_response.raise_for_status()
-            user_data = auth_response.json()
-        except Exception as e:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail=f"Failed to verify session: {str(e)}"
-            )
+class UserResponse(BaseModel):
+    id: str
+    email: str
+    name: Optional[str]
+    picture: Optional[str]
+    role: str
+    email_verified: bool
+    tenant_id: Optional[str]
     
-    stmt = select(User).where(User.email == user_data["email"])
-    result = await db.execute(stmt)
-    user = result.scalar_one_or_none()
-    
-    if not user:
-        slug = re.sub(r'[^a-z0-9]+', '-', user_data["email"].split('@')[0].lower()).strip('-')
-        tenant = Tenant(
-            name=f"{user_data['name']}'s Organization",
-            slug=slug
-        )
-        db.add(tenant)
-        await db.flush()
-        
-        user = User(
-            tenant_id=tenant.id,
-            email=user_data["email"],
-            name=user_data["name"],
-            picture=user_data.get("picture")
-        )
-        db.add(user)
-        await db.flush()
-        
-        stmt = select(Permission).where(Permission.name == "*.*")
-        result = await db.execute(stmt)
-        all_perm = result.scalar_one_or_none()
-        if not all_perm:
-            all_perm = Permission(
-                name="*.*",
-                description="All permissions",
-                resource="*",
-                action="*"
-            )
-            db.add(all_perm)
-            await db.flush()
-        
-        admin_role = Role(
-            tenant_id=tenant.id,
-            name="Admin",
-            description="Full access administrator"
-        )
-        db.add(admin_role)
-        await db.flush()
-        
-        admin_role.permissions.append(all_perm)
-        user.roles.append(admin_role)
-        
-        await db.commit()
-    
-    session_token = user_data["session_token"]
-    expires_at = datetime.now(timezone.utc) + timedelta(days=7)
-    
-    user_session = UserSession(
-        user_id=user.id,
-        session_token=session_token,
-        expires_at=expires_at
-    )
-    db.add(user_session)
-    await db.commit()
-    
-    response.set_cookie(
-        key="session_token",
-        value=session_token,
-        httponly=True,
-        secure=True,
-        samesite="none",
-        max_age=7 * 24 * 60 * 60,
-        path="/"
-    )
-    
-    return SessionDataResponse(
-        id=user.id,
-        email=user.email,
-        name=user.name,
-        picture=user.picture,
-        tenant_id=user.tenant_id,
-        session_token=session_token
-    )
+    class Config:
+        from_attributes = True
 
-@router.get("/me", response_model=UserWithRoles)
+
+class UpdateProfileRequest(BaseModel):
+    name: Optional[str] = None
+    phone: Optional[str] = None
+
+
+@router.get("/me", response_model=UserResponse)
 async def get_current_user_info(
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
-    stmt = select(User).where(User.id == user.id)
-    result = await db.execute(stmt)
-    user_with_relations = result.scalar_one()
-    
-    roles = [role.name for role in user_with_relations.roles]
-    permissions = set()
-    for role in user_with_relations.roles:
-        stmt = select(Role).where(Role.id == role.id)
-        result = await db.execute(stmt)
-        role_with_perms = result.scalar_one_or_none()
-        if role_with_perms:
-            for perm in role_with_perms.permissions:
-                permissions.add(f"{perm.resource}.{perm.action}")
-    
-    return UserWithRoles(
-        id=user.id,
+    """Get current authenticated user info."""
+    return UserResponse(
+        id=str(user.id),
         email=user.email,
         name=user.name,
         picture=user.picture,
-        tenant_id=user.tenant_id,
-        is_active=user.is_active,
-        created_at=user.created_at,
-        updated_at=user.updated_at,
-        roles=roles,
-        permissions=list(permissions)
+        role=user.role,
+        email_verified=user.email_verified,
+        tenant_id=str(user.tenant_id) if user.tenant_id else None
     )
 
-@router.post("/logout")
-async def logout(
-    response: Response,
+
+@router.put("/me", response_model=UserResponse)
+async def update_profile(
+    request: UpdateProfileRequest,
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
-    stmt = select(UserSession).where(UserSession.user_id == user.id)
-    result = await db.execute(stmt)
-    sessions = result.scalars().all()
+    """Update current user's profile."""
+    if request.name is not None:
+        user.name = request.name
+    if request.phone is not None:
+        user.phone = request.phone
     
-    for session in sessions:
-        await db.delete(session)
+    user.updated_at = datetime.now(timezone.utc)
     await db.commit()
+    await db.refresh(user)
     
+    return UserResponse(
+        id=str(user.id),
+        email=user.email,
+        name=user.name,
+        picture=user.picture,
+        role=user.role,
+        email_verified=user.email_verified,
+        tenant_id=str(user.tenant_id) if user.tenant_id else None
+    )
+
+
+@router.post("/logout")
+async def logout(response: Response):
+    """Logout - clears any server-side session data."""
+    # With Firebase auth, logout is primarily handled client-side
+    # This endpoint is for any server-side cleanup if needed
     response.delete_cookie("session_token", path="/")
     return {"message": "Logged out successfully"}
+
+
+@router.post("/setup-tenant")
+async def setup_tenant(
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    \"\"\"Create a tenant for the user if they don't have one.\"\"\"\n    if user.tenant_id:\n        return {\"message\": \"Tenant already exists\", \"tenant_id\": str(user.tenant_id)}\n    \n    # Create tenant from user email\n    slug = re.sub(r'[^a-z0-9]+', '-', user.email.split('@')[0].lower()).strip('-')\n    \n    # Check if slug exists\n    stmt = select(Tenant).where(Tenant.slug == slug)\n    result = await db.execute(stmt)\n    existing = result.scalar_one_or_none()\n    \n    if existing:\n        slug = f\"{slug}-{str(user.id)[:8]}\"\n    \n    tenant = Tenant(\n        name=f\"{user.name or user.email}'s Organization\",\n        slug=slug\n    )\n    db.add(tenant)\n    await db.flush()\n    \n    user.tenant_id = tenant.id\n    user.role = 'admin'  # First user of a tenant is admin\n    await db.commit()\n    \n    return {\"message\": \"Tenant created\", \"tenant_id\": str(tenant.id)}
