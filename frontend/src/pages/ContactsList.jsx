@@ -105,6 +105,7 @@ const saveDemoContacts = (contacts) => {
 };
 
 const ContactsList = ({ className }) => {
+  const { token } = useAuth();
   const [contacts, setContacts] = useState([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(0);
