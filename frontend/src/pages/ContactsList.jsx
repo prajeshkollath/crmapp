@@ -5,8 +5,7 @@ import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Badge } from '../components/ui/badge';
-import { Textarea } from '../components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
+import { Card, CardContent } from '../components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -35,7 +34,6 @@ import {
   Mail, 
   Phone, 
   Building, 
-  User,
   UserPlus,
 } from 'lucide-react';
 
@@ -131,33 +129,8 @@ const ContactsList = () => {
     tags: '',
   });
 
-  const fetchContacts = useCallback(async () => {
-    setLoading(true);
-    try {
-      const response = await fetch(
-        `${API_URL}/api/contacts?page=${page + 1}&page_size=${pageSize}${globalSearch ? '&search=' + globalSearch : ''}`,
-        { credentials: 'include' }
-      );
-      
-      if (response.ok) {
-        const data = await response.json();
-        setContacts(data.contacts || []);
-        setTotal(data.total || 0);
-        setIsDemoMode(false);
-      } else if (response.status === 401) {
-        // Use demo mode
-        useDemoMode();
-      }
-    } catch (error) {
-      console.error('Error fetching contacts:', error);
-      useDemoMode();
-    } finally {
-      setLoading(false);
-    }
-  }, [page, pageSize, globalSearch]);
-
-  const useDemoMode = useCallback(() => {
-    setIsDemoMode(true);
+  // Function to load demo mode data
+  const loadDemoData = useCallback(() => {
     let demoContacts = getDemoContacts();
     
     // Apply global search
@@ -198,13 +171,48 @@ const ContactsList = () => {
     setTotal(demoContacts.length);
   }, [globalSearch, filters, page, pageSize]);
 
+  const fetchContacts = useCallback(async () => {
+    setLoading(true);
+    try {
+      const response = await fetch(
+        `${API_URL}/api/contacts?page=${page + 1}&page_size=${pageSize}${globalSearch ? '&search=' + globalSearch : ''}`,
+        { credentials: 'include' }
+      );
+      
+      if (response.ok) {
+        const data = await response.json();
+        setContacts(data.contacts || []);
+        setTotal(data.total || 0);
+        setIsDemoMode(false);
+      } else if (response.status === 401) {
+        // Use demo mode
+        setIsDemoMode(true);
+        loadDemoData();
+      }
+    } catch (error) {
+      console.error('Error fetching contacts:', error);
+      setIsDemoMode(true);
+      loadDemoData();
+    } finally {
+      setLoading(false);
+    }
+  }, [page, pageSize, globalSearch, loadDemoData]);
+
   useEffect(() => {
     if (isDemoMode) {
-      useDemoMode();
+      loadDemoData();
+      setLoading(false);
     } else {
       fetchContacts();
     }
-  }, [fetchContacts, isDemoMode, useDemoMode, filters]);
+  }, [isDemoMode, loadDemoData, fetchContacts]);
+
+  // Re-apply filters when they change in demo mode
+  useEffect(() => {
+    if (isDemoMode) {
+      loadDemoData();
+    }
+  }, [isDemoMode, filters, loadDemoData]);
 
   const handleOpenDialog = (contact = null) => {
     if (contact) {
@@ -283,7 +291,7 @@ const ContactsList = () => {
         description: `${formData.first_name} ${formData.last_name} has been ${editingContact ? 'updated' : 'added'} successfully.`,
       });
       handleCloseDialog();
-      useDemoMode();
+      loadDemoData();
       return;
     }
 
@@ -348,7 +356,7 @@ const ContactsList = () => {
       });
       setOpenDeleteDialog(false);
       setDeletingContact(null);
-      useDemoMode();
+      loadDemoData();
       return;
     }
 
