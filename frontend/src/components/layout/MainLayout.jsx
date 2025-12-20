@@ -1,7 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
-import PageContainer from './PageContainer';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -25,12 +24,10 @@ const MainLayout = ({ children, user }) => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="h-screen flex overflow-hidden bg-background">
       <Sidebar user={user} onLogout={handleLogout} />
-      <main className="transition-all duration-300 ml-[260px] peer-data-[collapsed=true]:ml-[68px]">
-        <PageContainer>
-          {React.cloneElement(children, { user })}
-        </PageContainer>
+      <main className="flex-1 flex flex-col overflow-hidden ml-[260px] transition-all duration-300">
+        {React.cloneElement(children, { user })}
       </main>
     </div>
   );

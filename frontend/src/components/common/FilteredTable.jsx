@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React from 'react';
 import {
   Table,
   TableBody,
@@ -16,8 +16,6 @@ import {
   SelectValue,
 } from '../ui/select';
 import { Button } from '../ui/button';
-import { Card } from '../ui/card';
-import { Badge } from '../ui/badge';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -42,6 +40,7 @@ const FilteredTable = ({
   rowActions = [],
   emptyState,
   onRowClick,
+  fillHeight = false,
 }) => {
   const totalPages = Math.ceil(total / pageSize);
   const hasActiveFilters = Object.values(filters).some(v => v && v !== 'all');
@@ -57,10 +56,13 @@ const FilteredTable = ({
   };
 
   return (
-    <Card className="w-full overflow-hidden">
+    <div className={cn(
+      'flex flex-col border rounded-lg bg-card overflow-hidden',
+      fillHeight && 'flex-1'
+    )}>
       {/* Clear Filters Button */}
       {hasActiveFilters && (
-        <div className="flex items-center justify-between border-b border-border px-4 py-3 bg-muted/30">
+        <div className="flex items-center justify-between border-b border-border px-4 py-2 bg-muted/30 shrink-0">
           <span className="text-sm text-muted-foreground">
             {Object.values(filters).filter(v => v && v !== 'all').length} filter(s) active
           </span>
@@ -68,7 +70,7 @@ const FilteredTable = ({
             variant="ghost"
             size="sm"
             onClick={onClearFilters}
-            className="h-8 gap-1 text-muted-foreground hover:text-foreground"
+            className="h-7 gap-1 text-muted-foreground hover:text-foreground"
           >
             <X className="h-3.5 w-3.5" />
             Clear all filters
@@ -76,17 +78,20 @@ const FilteredTable = ({
         </div>
       )}
 
-      {/* Table Container */}
-      <div className="overflow-x-auto">
+      {/* Table Container - This is the scrollable area */}
+      <div className={cn(
+        'overflow-auto',
+        fillHeight ? 'flex-1' : 'max-h-[500px]'
+      )}>
         <Table className="min-w-[1200px]">
-          {/* Column Headers */}
-          <TableHeader>
+          {/* Column Headers - Sticky */}
+          <TableHeader className="sticky top-0 z-20 bg-card">
             <TableRow className="bg-muted/50 hover:bg-muted/50">
               {columns.map((column) => (
                 <TableHead
                   key={column.id}
                   className={cn(
-                    'font-semibold text-xs uppercase tracking-wider text-muted-foreground h-11 whitespace-nowrap',
+                    'font-semibold text-xs uppercase tracking-wider text-muted-foreground h-10 whitespace-nowrap',
                     column.className
                   )}
                   style={{ width: column.width, minWidth: column.minWidth }}
@@ -95,18 +100,18 @@ const FilteredTable = ({
                 </TableHead>
               ))}
               {rowActions.length > 0 && (
-                <TableHead className="w-[60px] text-right font-semibold text-xs uppercase tracking-wider text-muted-foreground h-11">
+                <TableHead className="w-[60px] text-right font-semibold text-xs uppercase tracking-wider text-muted-foreground h-10">
                   Actions
                 </TableHead>
               )}
             </TableRow>
 
-            {/* Filter Row */}
+            {/* Filter Row - Sticky */}
             <TableRow className="bg-muted/30 hover:bg-muted/30">
               {columns.map((column) => (
                 <TableHead
                   key={`filter-${column.id}`}
-                  className="h-12 py-2"
+                  className="h-10 py-1.5"
                   style={{ width: column.width, minWidth: column.minWidth }}
                 >
                   {column.filterable !== false && renderFilter(column, filters, handleFilterChange, clearFilter)}
@@ -122,7 +127,7 @@ const FilteredTable = ({
               <TableRow>
                 <TableCell
                   colSpan={columns.length + (rowActions.length > 0 ? 1 : 0)}
-                  className="h-32 text-center"
+                  className="h-24 text-center"
                 >
                   <div className="flex items-center justify-center">
                     <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
@@ -133,7 +138,7 @@ const FilteredTable = ({
               <TableRow>
                 <TableCell
                   colSpan={columns.length + (rowActions.length > 0 ? 1 : 0)}
-                  className="h-48 text-center"
+                  className="h-32 text-center"
                 >
                   {emptyState || (
                     <div className="text-muted-foreground">
@@ -156,13 +161,13 @@ const FilteredTable = ({
                   {columns.map((column) => (
                     <TableCell
                       key={`${row.id}-${column.id}`}
-                      className={cn('py-4', column.cellClassName)}
+                      className={cn('py-3', column.cellClassName)}
                     >
                       {column.render ? column.render(row) : row[column.id]}
                     </TableCell>
                   ))}
                   {rowActions.length > 0 && (
-                    <TableCell className="text-right py-4">
+                    <TableCell className="text-right py-3">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -197,8 +202,8 @@ const FilteredTable = ({
         </Table>
       </div>
 
-      {/* Pagination */}
-      <div className="flex items-center justify-between border-t border-border px-4 py-3">
+      {/* Pagination - Fixed at bottom */}
+      <div className="flex items-center justify-between border-t border-border px-4 py-2 bg-card shrink-0">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <span>Rows per page:</span>
           <Select
@@ -262,7 +267,7 @@ const FilteredTable = ({
           </div>
         </div>
       </div>
-    </Card>
+    </div>
   );
 };
 
@@ -276,7 +281,7 @@ function renderFilter(column, filters, onChange, onClear) {
         value={value || 'all'}
         onValueChange={(v) => onChange(column.id, v === 'all' ? '' : v)}
       >
-        <SelectTrigger className="h-8 text-xs bg-background">
+        <SelectTrigger className="h-7 text-xs bg-background">
           <SelectValue placeholder={column.filterPlaceholder || 'All'} />
         </SelectTrigger>
         <SelectContent>
@@ -299,7 +304,7 @@ function renderFilter(column, filters, onChange, onClear) {
         value={value}
         onChange={(e) => onChange(column.id, e.target.value)}
         placeholder={column.filterPlaceholder || 'Filter...'}
-        className="h-8 text-xs pr-7 bg-background"
+        className="h-7 text-xs pr-7 bg-background"
       />
       {value && (
         <button
