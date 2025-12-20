@@ -317,9 +317,16 @@ const ContactsList = ({ className }) => {
         ? `${API_URL}/api/contacts/${editingContact.id}`
         : `${API_URL}/api/contacts`;
 
+      const headers = {
+        'Content-Type': 'application/json',
+      };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
       const response = await fetch(url, {
         method: editingContact ? 'PUT' : 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         credentials: 'include',
         body: JSON.stringify(payload),
       });
