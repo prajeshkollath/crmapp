@@ -7,6 +7,7 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 10080
     CORS_ORIGINS: str = "*"
+    FIREBASE_PROJECT_ID: str = "pythonapi-460914"
     
     class Config:
         env_file = Path(__file__).parent.parent.parent / ".env"
