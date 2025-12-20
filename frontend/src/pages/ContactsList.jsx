@@ -521,49 +521,49 @@ const ContactsList = () => {
   ], []);
 
   return (
-    <div>
+    <div className="flex flex-col h-full overflow-hidden px-6 py-4">
       <Toaster />
       
-      <Header
-        title="Contacts"
-        subtitle={`${total} total contacts`}
-        breadcrumbs={[
-          { label: 'Home', href: '/' },
-          { label: 'Contacts' },
-        ]}
-        actionLabel="Add Contact"
-        actionIcon={Plus}
-        onAction={() => handleOpenDialog()}
-      />
+      {/* Header Section - Fixed Height */}
+      <div className="shrink-0">
+        <Header
+          title="Contacts"
+          subtitle={`${total} total contacts`}
+          breadcrumbs={[
+            { label: 'Home', href: '/' },
+            { label: 'Contacts' },
+          ]}
+          actionLabel="Add Contact"
+          actionIcon={Plus}
+          onAction={() => handleOpenDialog()}
+          compact
+        />
 
-      {/* Global Search */}
-      <div className="mb-6">
-        <div className="relative max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            type="text"
-            placeholder="Search contacts..."
-            value={globalSearch}
-            onChange={(e) => {
-              setGlobalSearch(e.target.value);
-              setPage(0);
-            }}
-            className="pl-10"
-            data-testid="search-input"
-          />
+        {/* Global Search and Demo Badge Row */}
+        <div className="flex items-center gap-4 mb-4">
+          <div className="relative max-w-md flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder="Search contacts..."
+              value={globalSearch}
+              onChange={(e) => {
+                setGlobalSearch(e.target.value);
+                setPage(0);
+              }}
+              className="pl-10 h-9"
+              data-testid="search-input"
+            />
+          </div>
+          {isDemoMode && (
+            <Badge variant="secondary" className="bg-amber-100 text-amber-800 shrink-0">
+              Demo Mode
+            </Badge>
+          )}
         </div>
       </div>
 
-      {/* Demo Mode Badge */}
-      {isDemoMode && (
-        <div className="mb-4">
-          <Badge variant="secondary" className="bg-amber-100 text-amber-800">
-            Demo Mode - Data stored locally
-          </Badge>
-        </div>
-      )}
-
-      {/* Filtered Table */}
+      {/* Filtered Table - Fills Remaining Space */}
       <FilteredTable
         columns={columns}
         data={contacts}
@@ -580,14 +580,15 @@ const ContactsList = () => {
         onFilterChange={setFilters}
         onClearFilters={() => setFilters({})}
         rowActions={rowActions}
+        fillHeight
         emptyState={
-          <div className="text-center py-8">
-            <UserPlus className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
-            <p className="text-lg font-medium text-foreground">No contacts found</p>
-            <p className="text-sm text-muted-foreground mt-1 mb-4">
+          <div className="text-center py-6">
+            <UserPlus className="h-10 w-10 mx-auto text-muted-foreground/50 mb-3" />
+            <p className="text-base font-medium text-foreground">No contacts found</p>
+            <p className="text-sm text-muted-foreground mt-1 mb-3">
               Get started by adding your first contact
             </p>
-            <Button onClick={() => handleOpenDialog()}>
+            <Button size="sm" onClick={() => handleOpenDialog()}>
               <Plus className="h-4 w-4 mr-2" />
               Add Contact
             </Button>
