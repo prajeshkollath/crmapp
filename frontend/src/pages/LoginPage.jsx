@@ -136,7 +136,7 @@ const LoginPage = () => {
               </Button>
 
               <p className="text-center text-xs text-muted-foreground pt-4">
-                Demo mode uses local storage and doesn't require authentication.
+                Demo mode uses local storage and does not require authentication.
                 <br />
                 For production use, sign in with Google.
               </p>
