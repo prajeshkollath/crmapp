@@ -5,7 +5,6 @@ import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Badge } from '../components/ui/badge';
-import { Card, CardContent } from '../components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -104,7 +103,7 @@ const saveDemoContacts = (contacts) => {
   localStorage.setItem(DEMO_STORAGE_KEY, JSON.stringify(contacts));
 };
 
-const ContactsList = () => {
+const ContactsList = ({ className }) => {
   const [contacts, setContacts] = useState([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(0);
@@ -116,11 +115,7 @@ const ContactsList = () => {
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [deletingContact, setDeletingContact] = useState(null);
   const [editingContact, setEditingContact] = useState(null);
-  const [isDemoMode, setIsDemoMode] = useState(() => {
-    // Check if we're in demo mode on initialization
-    const demoUser = sessionStorage.getItem('demo_user');
-    return demoUser ? true : false;
-  });
+  const [isDemoMode, setIsDemoMode] = useState(false);
   const { toast } = useToast();
   
   const [formData, setFormData] = useState({
@@ -203,13 +198,6 @@ const ContactsList = () => {
   }, [page, pageSize, globalSearch, loadDemoData]);
 
   useEffect(() => {
-    // Check for demo mode on mount
-    const demoUser = sessionStorage.getItem('demo_user');
-    if (demoUser && !isDemoMode) {
-      setIsDemoMode(true);
-      return;
-    }
-    
     if (isDemoMode) {
       loadDemoData();
       setLoading(false);
@@ -521,11 +509,11 @@ const ContactsList = () => {
   ], []);
 
   return (
-    <div className="flex flex-col h-full overflow-hidden px-6 py-4">
+    <div className={`flex flex-col h-full overflow-hidden p-4 ${className || ''}`}>
       <Toaster />
       
       {/* Header Section - Fixed Height */}
-      <div className="shrink-0">
+      <div className="shrink-0 mb-3">
         <Header
           title="Contacts"
           subtitle={`${total} total contacts`}
@@ -540,8 +528,8 @@ const ContactsList = () => {
         />
 
         {/* Global Search and Demo Badge Row */}
-        <div className="flex items-center gap-4 mb-4">
-          <div className="relative max-w-md flex-1">
+        <div className="flex items-center gap-4 mt-3">
+          <div className="relative max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               type="text"
@@ -551,7 +539,7 @@ const ContactsList = () => {
                 setGlobalSearch(e.target.value);
                 setPage(0);
               }}
-              className="pl-10 h-9"
+              className="pl-10 h-9 w-64"
               data-testid="search-input"
             />
           </div>
@@ -564,37 +552,39 @@ const ContactsList = () => {
       </div>
 
       {/* Filtered Table - Fills Remaining Space */}
-      <FilteredTable
-        columns={columns}
-        data={contacts}
-        loading={loading}
-        total={total}
-        page={page}
-        pageSize={pageSize}
-        onPageChange={setPage}
-        onPageSizeChange={(size) => {
-          setPageSize(size);
-          setPage(0);
-        }}
-        filters={filters}
-        onFilterChange={setFilters}
-        onClearFilters={() => setFilters({})}
-        rowActions={rowActions}
-        fillHeight
-        emptyState={
-          <div className="text-center py-6">
-            <UserPlus className="h-10 w-10 mx-auto text-muted-foreground/50 mb-3" />
-            <p className="text-base font-medium text-foreground">No contacts found</p>
-            <p className="text-sm text-muted-foreground mt-1 mb-3">
-              Get started by adding your first contact
-            </p>
-            <Button size="sm" onClick={() => handleOpenDialog()}>
-              <Plus className="h-4 w-4 mr-2" />
-              Add Contact
-            </Button>
-          </div>
-        }
-      />
+      <div className="flex-1 min-h-0">
+        <FilteredTable
+          columns={columns}
+          data={contacts}
+          loading={loading}
+          total={total}
+          page={page}
+          pageSize={pageSize}
+          onPageChange={setPage}
+          onPageSizeChange={(size) => {
+            setPageSize(size);
+            setPage(0);
+          }}
+          filters={filters}
+          onFilterChange={setFilters}
+          onClearFilters={() => setFilters({})}
+          rowActions={rowActions}
+          fillHeight
+          emptyState={
+            <div className="text-center py-6">
+              <UserPlus className="h-10 w-10 mx-auto text-muted-foreground/50 mb-3" />
+              <p className="text-base font-medium text-foreground">No contacts found</p>
+              <p className="text-sm text-muted-foreground mt-1 mb-3">
+                Get started by adding your first contact
+              </p>
+              <Button size="sm" onClick={() => handleOpenDialog()}>
+                <Plus className="h-4 w-4 mr-2" />
+                Add Contact
+              </Button>
+            </div>
+          }
+        />
+      </div>
 
       {/* Add/Edit Dialog */}
       <Dialog open={openDialog} onOpenChange={setOpenDialog}>

@@ -57,8 +57,8 @@ const FilteredTable = ({
 
   return (
     <div className={cn(
-      'flex flex-col border rounded-lg bg-card overflow-hidden',
-      fillHeight && 'flex-1'
+      'flex flex-col border rounded-lg bg-card',
+      fillHeight ? 'h-full' : ''
     )}>
       {/* Clear Filters Button */}
       {hasActiveFilters && (
@@ -78,11 +78,8 @@ const FilteredTable = ({
         </div>
       )}
 
-      {/* Table Container - This is the scrollable area */}
-      <div className={cn(
-        'overflow-auto',
-        fillHeight ? 'flex-1' : 'max-h-[500px]'
-      )}>
+      {/* Table Container - Scrollable */}
+      <div className="flex-1 overflow-auto min-h-0">
         <Table className="min-w-[1200px]">
           {/* Column Headers - Sticky */}
           <TableHeader className="sticky top-0 z-20 bg-card">
