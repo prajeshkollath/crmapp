@@ -18,14 +18,13 @@ const ResetPasswordPage = () => {
   const [success, setSuccess] = useState(false);
   const [oobCode, setOobCode] = useState('');
 
+  const oobCode = searchParams.get('oobCode') || '';
+  
   useEffect(() => {
-    const code = searchParams.get('oobCode');
-    if (code) {
-      setOobCode(code);
-    } else {
+    if (!oobCode) {
       setError('Invalid or expired reset link. Please request a new one.');
     }
-  }, [searchParams]);
+  }, [oobCode]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
