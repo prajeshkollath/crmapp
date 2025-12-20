@@ -16,7 +16,6 @@ const ResetPasswordPage = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
-  const [oobCode, setOobCode] = useState('');
 
   const oobCode = searchParams.get('oobCode') || '';
   
